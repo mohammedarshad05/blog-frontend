@@ -7,7 +7,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
             <Link
           href="/"
-          className="font-serif text-2xl text-gray-900"
+          className="font-sans text-2xl text-[#1c1c1a] font-semibold"
         >
           My Blog
         </Link>

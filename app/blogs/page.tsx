@@ -6,9 +6,9 @@ export default async function BlogsPage() {
     const blogs = await getAllBlogs();
 
     return (
-        <section className="h-full py-16">
+        <section className="h-full py-16 max-w-6xl mx-auto">
             <div className="text-center">
-                <h1 className="text-[56px] font-bold text-[#1c1c1c]">The Journal</h1>
+                <h1 className="text-2xl md:text-3xl lg:text-[56px] font-bold text-[#1c1c1c]">The Journal</h1>
                 <p className="text-base text-[#6b6a65] ">Thoughtful essays and ideas from writers who care about craft.</p>
             </div>
             <div>
