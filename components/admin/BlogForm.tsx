@@ -31,7 +31,7 @@ export default function BlogForm() {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/blogs", {
+      const response = await fetch("https://blog-backend-production-ed2c.up.railway.app/api/blogs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
