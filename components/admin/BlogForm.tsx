@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_ENDPOINTS } from "@/constants/api";
 
 export default function BlogForm() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function BlogForm() {
     };
 
     try {
-      const response = await fetch("https://blog-backend-production-ed2c.up.railway.app/api/blogs", {
+      const response = await fetch(API_ENDPOINTS.blogs, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
