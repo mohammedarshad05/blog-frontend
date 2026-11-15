@@ -10,6 +10,7 @@ export default function BlogForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,6 +18,7 @@ export default function BlogForm() {
     setIsSubmitting(true);
     setMessage("");
     setError("");
+    setFieldErrors({});
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -40,17 +42,32 @@ export default function BlogForm() {
         body: JSON.stringify(blogData),
       });
 
-      const result = await response.json();
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+      const result = isJson ? await response.json() : null;
 
       if (!response.ok) {
-        throw new Error(result.message || "Failed to create blog");
+        if (result?.errors) {
+          setFieldErrors(result.errors);
+        }
+        setError(
+          result?.message ||
+          (isJson ? "Failed to create blog" : "Server error (500). Please check your input or server logs.")
+        );
+        return;
       }
 
-      setMessage("Blog created successfully!");
+      setMessage(result.message || "Blog created successfully!");
       form.reset();
 
-      router.push("/blogs");
-      router.refresh();
+      setTimeout(() => {
+        router.push(
+          `/blogs?message=${encodeURIComponent(
+            result.message || "Blog created successfully!"
+          )}`
+        );
+        router.refresh();
+      }, 1200);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong"
@@ -77,7 +94,13 @@ export default function BlogForm() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-10 flex flex-col gap-6">
+        {message && (
+          <div className="mt-6 rounded-[4px] border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} noValidate className="mt-10 flex flex-col gap-6">
           <div className="rounded-[4px] border border-[#e5e4df] bg-white p-7">
             <p className="mb-6 text-sm font-semibold uppercase tracking-[0.08em] text-[#9a9a94]">
               Blog Details
@@ -95,10 +118,16 @@ export default function BlogForm() {
                 type="text"
                 id="title"
                 name="title"
+                maxLength={255}
                 placeholder="Enter a compelling title..."
-                className="block w-full rounded-xs border border-[#e5e4df] bg-transparent p-3 text-sm text-gray-900 outline-none transition focus:border-[#9a9a94]"
+                className={`block w-full rounded-xs border bg-transparent p-3 text-sm text-gray-900 outline-none transition ${
+                  fieldErrors.title ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+                }`}
                 required
               />
+              {fieldErrors.title && (
+                <p className="mt-1.5 text-sm text-red-600">{fieldErrors.title[0]}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -114,10 +143,16 @@ export default function BlogForm() {
                   type="text"
                   id="slug"
                   name="slug"
+                  maxLength={255}
                   placeholder="your-blog-slug"
-                  className="block w-full rounded-xs border border-[#e5e4df] bg-transparent p-3 text-sm text-gray-900 outline-none transition focus:border-[#9a9a94]"
+                  className={`block w-full rounded-xs border bg-transparent p-3 text-sm text-gray-900 outline-none transition ${
+                    fieldErrors.slug ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+                  }`}
                   required
                 />
+                {fieldErrors.slug && (
+                  <p className="mt-1.5 text-sm text-red-600">{fieldErrors.slug[0]}</p>
+                )}
               </div>
 
               <div>
@@ -131,7 +166,9 @@ export default function BlogForm() {
                 <select
                   id="category"
                   name="category"
-                  className="block w-full rounded-xs border border-[#e5e4df] bg-transparent p-3 text-sm text-gray-900 outline-none transition focus:border-[#9a9a94]"
+                  className={`block w-full rounded-xs border bg-transparent p-3 text-sm text-gray-900 outline-none transition ${
+                    fieldErrors.category ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+                  }`}
                   required
                 >
                   <option value="">Select a category</option>
@@ -141,6 +178,9 @@ export default function BlogForm() {
                   <option value="Travel">Travel</option>
                   <option value="Food">Food</option>
                 </select>
+                {fieldErrors.category && (
+                  <p className="mt-1.5 text-sm text-red-600">{fieldErrors.category[0]}</p>
+                )}
               </div>
 
               <div>
@@ -155,10 +195,16 @@ export default function BlogForm() {
                   type="text"
                   id="author"
                   name="author"
+                  maxLength={100}
                   placeholder="Author name"
-                  className="block w-full rounded-xs border border-[#e5e4df] bg-transparent p-3 text-sm text-gray-900 outline-none transition focus:border-[#9a9a94]"
+                  className={`block w-full rounded-xs border bg-transparent p-3 text-sm text-gray-900 outline-none transition ${
+                    fieldErrors.author ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+                  }`}
                   required
                 />
+                {fieldErrors.author && (
+                  <p className="mt-1.5 text-sm text-red-600">{fieldErrors.author[0]}</p>
+                )}
               </div>
 
               <div>
@@ -199,8 +245,13 @@ export default function BlogForm() {
                 id="featuredImage"
                 name="featuredImage"
                 placeholder="https://images.unsplash.com/..."
-                className="block w-full rounded-xs border border-[#e5e4df] bg-transparent p-3 text-sm text-gray-900 outline-none transition focus:border-[#9a9a94]"
+                className={`block w-full rounded-xs border bg-transparent p-3 text-sm text-gray-900 outline-none transition ${
+                  fieldErrors.featuredImage ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+                }`}
               />
+              {fieldErrors.featuredImage && (
+                <p className="mt-1.5 text-sm text-red-600">{fieldErrors.featuredImage[0]}</p>
+              )}
             </div>
 
             <div className="mt-5">
@@ -215,10 +266,16 @@ export default function BlogForm() {
                 id="excerpt"
                 name="excerpt"
                 rows={5}
+                maxLength={255}
                 placeholder="Write a brief summary..."
-                className="block w-full resize-y rounded-xs border border-[#e5e4df] bg-transparent p-3 text-sm leading-6 text-gray-900 outline-none transition focus:border-[#9a9a94]"
+                className={`block w-full resize-y rounded-xs border bg-transparent p-3 text-sm leading-6 text-gray-900 outline-none transition ${
+                  fieldErrors.excerpt ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+                }`}
                 required
               />
+              {fieldErrors.excerpt && (
+                <p className="mt-1.5 text-sm text-red-600">{fieldErrors.excerpt[0]}</p>
+              )}
             </div>
           </div>
 
@@ -239,9 +296,14 @@ export default function BlogForm() {
               name="content"
               rows={14}
               placeholder="Start writing your article..."
-              className="block w-full resize-y rounded-xs border border-[#e5e4df] bg-transparent p-4 text-sm leading-7 text-gray-900 outline-none transition focus:border-[#9a9a94]"
+              className={`block w-full resize-y rounded-xs border bg-transparent p-4 text-sm leading-7 text-gray-900 outline-none transition ${
+                fieldErrors.content ? "border-red-500" : "border-[#e5e4df] focus:border-[#9a9a94]"
+              }`}
               required
             />
+            {fieldErrors.content && (
+              <p className="mt-1.5 text-sm text-red-600">{fieldErrors.content[0]}</p>
+            )}
           </div>
 
           {message && (
